@@ -1,0 +1,37 @@
+# 应用基本配置
+spring:
+  mvc:
+    view:
+      prefix: /templates/
+      suffix: .html
+  application:
+    name: FileSwapWeb  # 应用名称，可自定义
+  servlet:
+    multipart:
+      max-file-size: 10MB  # 单个文件上传最大大小，可按需调整
+      max-request-size: 10MB # 单次请求上传文件总大小，可按需调整
+  datasource:
+    driver-class-name: org.sqlite.JDBC
+    url: jdbc:sqlite:src/main/resources/Db/FileSwap.db  # SQLite 数据库文件路径，这里假设在项目根目录下创建 test.db 文件
+# MyBatis 配置
+mybatis:
+  # Mapper XML 文件的位置，使用通配符指定多个文件路径，这里假设放在 resources/mapper 目录下
+  mapper-locations: classpath:mao/fileswap/dao/*Mapper.xml
+  # 实体类所在的包路径，方便 MyBatis 在进行 SQL 结果映射等操作时能自动识别对应的实体类
+  type-aliases-package: mao.fileswap.entity
+  # 开启驼峰命名自动转换（比如数据库字段名为 user_name，在实体类中可自动映射为 userName），可选配置，根据需求决定是否开启
+  configuration:
+    map-underscore-to-camel-case: true
+    # 设置日志级别，可帮助你在开发调试阶段查看 MyBatis 执行的 SQL 语句等信息，可选值有 DEBUG、INFO、WARN、ERROR 等，DEBUG 级别会输出更详细信息
+    log-level: DEBUG
+server:
+  port: 8080
+  error:
+    path: /error
+    white-label:
+      enabled: false
+# 日志配置
+logging:
+  level:
+    com.example.exceldemo: debug  # 根据包名设置日志级别，这里设置项目中自定义代码的日志级别为 debug，方便调试，可按需调整
+    org.springframework.web: info  # Spring Web 相关框架的日志级别设为 info
