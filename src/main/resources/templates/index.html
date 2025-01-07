@@ -8,27 +8,29 @@
 <div id="app">
     <el-row>
         <el-col :span="6">
-            <el-button>默认按钮</el-button>
-        </el-col>
-        <el-col :span="6">
             <el-upload
+                    ref="uploadFile"
                     class="upload-demo"
-                    action="#"
+                    action="/excel/uploadProExcel"
                     :on-remove="fileRemove"
                     :on-change="fileChang"
-                    accept=""
-                    :show-file-list="false"
                     :auto-upload="false"
                     :multiple="true"
                     :file-list="form.instFilePics"
-                    ref="uploadFile">
-                <el-button size="small" type="primary" >
-                    <i class="el-icon-share"></i>
-                </el-button>
+                    drag>
+                <i class="el-icon-upload"></i>
+                <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
             </el-upload>
         </el-col>
     </el-row>
-
+    <el-row>
+        <el-col :span="6">
+            <el-button style="margin-left: 10px;" size="small" type="success" @click="submitUpload">上传到服务器</el-button>
+        </el-col>
+        <el-col :span="6">
+            <el-button style="margin-left: 10px;" size="small" type="success" @click="download">生成报告</el-button>
+        </el-col>
+    </el-row>
 </div>
 </body>
 </html><!-- 引入样式 -->
@@ -46,14 +48,18 @@
             form: {}
         },
         mounted() {
-            // axios.get('/api/data')
-            //     .then(response => {
-            //         this.message = response.data.message;
-            //     });
+            axios.post('/excel/uploadProExcel')
+                .then(response => {
+                    this.message = response.data.message;
+                });
         },
         methods: {
             fileRemove(){},
-            fileChang(){}
+            fileChang(){},
+            submitUpload(){
+                this.$refs.uploadFile.submit();
+            },
+            download(){},
         }
     });
 </script>
