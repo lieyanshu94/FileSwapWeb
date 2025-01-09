@@ -1,38 +1,51 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <title>Welcome to Spring Boot Web Page</title>
 </head>
+
 <body>
-<div id="app">
-    <el-row>
-        <el-col :span="6">
-            <el-upload
-                    ref="uploadFile"
-                    class="upload-demo"
-                    action="/excel/uploadProExcel"
-                    :on-remove="fileRemove"
-                    :on-change="fileChang"
-                    :auto-upload="false"
-                    :multiple="true"
-                    :file-list="form.instFilePics"
-                    drag>
-                <i class="el-icon-upload"></i>
-                <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
-            </el-upload>
-        </el-col>
-    </el-row>
-    <el-row>
-        <el-col :span="6">
-            <el-button style="margin-left: 10px;" size="small" type="success" @click="submitUpload">上传到服务器</el-button>
-        </el-col>
-        <el-col :span="6">
-            <el-button style="margin-left: 10px;" size="small" type="success" @click="download">生成报告</el-button>
-        </el-col>
-    </el-row>
-</div>
+    <div id="app">
+        <el-row>
+            <el-col :span="8">
+                <el-upload ref="uploadProExcels" class="upload-demo" action="/excel/uploadProExcels"
+                    :on-remove="fileRemove" :on-change="uploadProExcelsChang" :auto-upload="false" :multiple="true"
+                    :file-list="form.instProFiles" drag>
+                    <i class="el-icon-upload"></i>
+                    <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+                </el-upload>
+            </el-col>
+            <el-col :span="8">
+                <el-upload ref="uploadTestExcels" class="upload-demo" action="/excel/uploadTestExcels"
+                    :on-remove="fileRemove" :on-change="fileChang" :auto-upload="false" :multiple="true"
+                    :file-list="form.instTestFiles" drag>
+                    <i class="el-icon-upload"></i>
+                    <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+                </el-upload>
+            </el-col>
+            <el-col :span="8">
+                <el-upload ref="uploadInventory" class="upload-demo" action="/excel/uploadInventory"
+                    :on-remove="fileRemove" :on-change="fileChang" :auto-upload="false" :multiple="true"
+                    :file-list="form.inventory" drag>
+                    <i class="el-icon-upload"></i>
+                    <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+                </el-upload>
+            </el-col>
+        </el-row>
+        <el-row>
+            <el-col :span="6">
+                <el-button style="margin-left: 10px;" size="small" type="success" @click="submitUpload">上传到服务器
+                </el-button>
+            </el-col>
+            <el-col :span="6">
+                <el-button style="margin-left: 10px;" size="small" type="success" @click="download">生成报告</el-button>
+            </el-col>
+        </el-row>
+    </div>
 </body>
+
 </html><!-- 引入样式 -->
 <link rel="stylesheet" href="./css/index.css">
 <script src="./js/axios.min.js"></script>
@@ -45,21 +58,44 @@
         el: '#app',
         data: {
             message: 'Hello, Thymeleaf and Vue!',
-            form: {}
+            form: {},
+            proFormData: new FormData()
+
         },
         mounted() {
-            axios.post('/excel/uploadProExcel')
-                .then(response => {
-                    this.message = response.data.message;
-                });
+            // axios.post('/excel/uploadProExcel')
+            //     .then(response => {
+            //         this.message = response.data.message;
+            //     });
         },
         methods: {
-            fileRemove(){},
-            fileChang(){},
-            submitUpload(){
-                this.$refs.uploadFile.submit();
+            fileRemove() { },
+            fileChang() { },
+            uploadProExcelsChang(file,fileList) {
             },
-            download(){},
+            submitUpload() {
+                // this.$refs.uploadProExcels.submit();
+                // this.$refs.uploadProExcels.uploadFiles;
+                var files = this.$refs.uploadProExcels.uploadFiles;
+                for (var file in files) {
+                    this.proFormData.append("files",files[file].raw)
+                }
+                axios({
+                    headers:{
+                        "Content-Type":"multipart/form-data"
+                    },
+                    method: 'post',
+                    url: "/excel/uploadProExcels",
+                    data: this.proFormData
+                }).then(req => {
+                    console.log(req);
+                    for (let key of this.proFormData.keys()) {
+                        this.proFormData.delete(key);
+                    }
+                    debugger;
+                })
+            },
+            download() { },
         }
     });
 </script>
