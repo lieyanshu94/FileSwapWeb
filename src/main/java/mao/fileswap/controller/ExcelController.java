@@ -23,7 +23,7 @@ public class ExcelController {
     @ResponseBody
     private R uploadProExcels(@RequestParam("files") MultipartFile[] files){
         for (MultipartFile file : files) {
-            String name = file.getName();
+            String name = file.getOriginalFilename();
             InputStream is;
             try {
                 is = file.getInputStream();
