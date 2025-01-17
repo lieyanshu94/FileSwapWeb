@@ -1,12 +1,24 @@
 package mao.fileswap.util;
 
+import mao.fileswap.entity.*;
 import mao.fileswap.service.*;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-@Service
+@Component
 public class ExcelUtil {
 
     @Autowired
@@ -31,47 +43,228 @@ public class ExcelUtil {
         boolean isPro = true;
         switch (fileName) {
             case "FT_TRANSCODE.xlsx":
-                return updateNewTrans(is,isPro);
+                return updateOldTrans(is, isPro);
             case "FT_USER_INFO.xlsx":
-                return updateNewUsers(is,isPro);
+                return updateOldUsers(is, isPro);
             case "传输代码数据.xlsx":
-                return updateOldTrans(is,isPro);
+                return updateNewTrans(is, isPro);
             case "用户数据.xlsx":
-                return updateOldUsers(is,isPro);
+                return updateNewUsers(is, isPro);
             default:
                 throw new RuntimeException("文件不存在");
         }
     }
-    public boolean updateNewTrans(InputStream is,boolean isPro){
-        if (isPro){
 
+    public Workbook IStoWB(InputStream is) {
+        try (Workbook wb = new XSSFWorkbook(is)) {
+            return wb;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private boolean updateOldTrans(InputStream is, boolean isPro) {
+        Workbook wb = IStoWB(is);
+        Sheet sheet = wb.getSheetAt(0);
+        List<Map<String, String>> list = new ArrayList<>();
+        for (int rowNum = 1; rowNum <= sheet.getLastRowNum(); rowNum++) {
+            Row row = sheet.getRow(rowNum);
+            Map<String, String> map = new HashMap<>();
+            String tranCode = row.getCell(0).getStringCellValue();
+            String putAuth = row.getCell(5).getStringCellValue();
+            String getAuth = row.getCell(6).getStringCellValue();
+            list.add(makeTransMap(tranCode, getAuth, putAuth));
+        }
+        if (isPro) {
+            for (Map<String, String> map : list) {
+                OldTransPro otp = new OldTransPro();
+                String transCode = map.get("transCode");
+                String name = map.get("name");
+                String getAuth = map.get("getAuth");
+                String putAuth = map.get("putAuth");
+                makeTransDao(otp, transCode, name, putAuth, getAuth);
+                oldTransProService.saveOrUpdate(otp);
+            }
         } else {
+            for (Map<String, String> map : list) {
+                OldTransTest ott = new OldTransTest();
+                String transCode = map.get("transCode");
+                String name = map.get("name");
+                String getAuth = map.get("getAuth");
+                String putAuth = map.get("putAuth");
+                makeTransDao(ott, transCode, name, putAuth, getAuth);
+                oldTransTestService.saveOrUpdate(ott);
+            }
 
         }
         return false;
     }
-    public boolean updateOldTrans(InputStream is,boolean isPro){
-        if (isPro){
 
+    private boolean updateNewTrans(InputStream is, boolean isPro) {
+        Workbook wb = IStoWB(is);
+        Sheet sheet = wb.getSheetAt(0);
+        List<Map<String, String>> list = new ArrayList<>();
+        for (int rowNum = 2; rowNum <= sheet.getLastRowNum(); rowNum++) {
+            Row row = sheet.getRow(rowNum);
+            String tranCode = row.getCell(0).getStringCellValue();
+            String putAuth = row.getCell(7).getStringCellValue();
+            String getAuth = row.getCell(8).getStringCellValue();
+            list.add(makeTransMap(tranCode, getAuth, putAuth));
+        }
+        if (isPro) {
+            for (Map<String, String> map : list) {
+                NewTransPro ntp = new NewTransPro();
+                String transCode = map.get("transCode");
+                String name = map.get("name");
+                String getAuth = map.get("getAuth");
+                String putAuth = map.get("putAuth");
+                makeTransDao(ntp, transCode, name, putAuth, getAuth);
+                newTransProService.saveOrUpdate(ntp);
+            }
         } else {
+            for (Map<String, String> map : list) {
+                NewTransTest ntt = new NewTransTest();
+                String transCode = map.get("transCode");
+                String name = map.get("name");
+                String getAuth = map.get("getAuth");
+                String putAuth = map.get("putAuth");
+                makeTransDao(ntt, transCode, name, putAuth, getAuth);
+                newTransTestService.saveOrUpdate(ntt);
+            }
 
         }
         return false;
     }
-    public boolean updateNewUsers(InputStream is,boolean isPro){
-        if (isPro){
 
+    private Map<String, String> makeTransMap(String tranCode, String getAuth, String putAuth) {
+        Map<String, String> map = new HashMap<>();
+        if (tranCode.equals("666666")) {
+            map.put("name", "esb");
+            map.put("transCode", tranCode);
+            map.put("getAuth", getAuth);
+            for (String path : putAuth.split(",")) {
+                String name = path.split("=")[0];
+                if (!name.equals("esb")) {
+                } else {
+                    map.put("petAuth", path.substring(path.indexOf("=") + 1, path.length()));
+                }
+            }
         } else {
+            for (String str : putAuth.split(",")) {
+                int indexOf = str.indexOf("=");
+                if (indexOf == -1) {
+                    System.out.println("a");
+                }
+                String name = str.substring(0, indexOf);
+                String path = str.substring(indexOf + 1, str.length());
+                if (name.equals("esb")) {
+                    continue;
+                }
+                map.put("name", name);
+                map.put("transCode", tranCode);
+                map.put("getAuth", getAuth);
+                map.put("putAuth", path);
+            }
+        }
+        return map;
+    }
+
+    private boolean updateNewUsers(InputStream is, boolean isPro) {
+        Workbook wb = IStoWB(is);
+        Sheet sheet = wb.getSheetAt(0);
+        List<Map<String, String>> list = new ArrayList<>();
+        for (int rowNum = 2; rowNum <= sheet.getLastRowNum(); rowNum++) {
+            Row row = sheet.getRow(rowNum);
+            Map<String, String> map = new HashMap<>();
+            String uid = row.getCell(0).getStringCellValue();
+            String cnName = row.getCell(2).getStringCellValue();
+            map.put("uid", uid);
+            map.put("cnName", cnName);
+            list.add(map);
+        }
+        if (isPro) {
+            for (Map<String, String> map : list) {
+                NewUsersPro nup = new NewUsersPro();
+                makeUserDao(nup, map.get("uid"), map.get("cnName"));
+                newUsersProService.saveOrUpdate(nup);
+            }
+        } else {
+            for (Map<String, String> map : list) {
+                NewUsersTest nut = new NewUsersTest();
+                makeUserDao(nut, map.get("uid"), map.get("cnName"));
+                newUsersTestService.saveOrUpdate(nut);
+            }
 
         }
         return false;
     }
-    public boolean updateOldUsers(InputStream is,boolean isPro){
-        if (isPro){
 
+
+    private boolean updateOldUsers(InputStream is, boolean isPro) {
+        Workbook wb = IStoWB(is);
+        Sheet sheet = wb.getSheetAt(0);
+        List<Map<String, String>> list = new ArrayList<>();
+        for (int rowNum = 1; rowNum <= sheet.getLastRowNum(); rowNum++) {
+            Row row = sheet.getRow(rowNum);
+            Map<String, String> map = new HashMap<>();
+            String uid = row.getCell(5).getStringCellValue();
+            String cnName = row.getCell(1).getStringCellValue();
+            map.put("uid", uid);
+            map.put("cnName", cnName);
+            list.add(map);
+        }
+        if (isPro) {
+            for (Map<String, String> map : list) {
+                OldUsersPro oup = new OldUsersPro();
+                makeUserDao(oup, map.get("uid"), map.get("cnName"));
+                oldUsersProService.saveOrUpdate(oup);
+            }
         } else {
+            for (Map<String, String> map : list) {
+                OldUsersTest out = new OldUsersTest();
+                makeUserDao(out, map.get("uid"), map.get("cnName"));
+                oldUsersTestService.saveOrUpdate(out);
+            }
 
         }
         return false;
+    }
+
+    private <T> T makeUserDao(T dao, String uid, String cnName) {
+        Class<?> daoClazz = dao.getClass();
+        try {
+            Method setUid = daoClazz.getDeclaredMethod("setUid", String.class);
+            Method setCnName = daoClazz.getDeclaredMethod("setCnName", String.class);
+            setUid.invoke(dao, uid);
+            setCnName.invoke(dao, cnName);
+        } catch (NoSuchMethodException e) {
+            throw new RuntimeException(e);
+        } catch (InvocationTargetException e) {
+            throw new RuntimeException(e);
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+        return dao;
+    }
+
+    private <T> T makeTransDao(T dao, String transCode, String name, String putAuth, String getAuth) {
+        Class<?> daoClazz = dao.getClass();
+        try {
+            Method setTransCode = daoClazz.getDeclaredMethod("setTransCode", String.class);
+            Method setName = daoClazz.getDeclaredMethod("setName", String.class);
+            Method setPutAuth = daoClazz.getDeclaredMethod("setPutAuth", String.class);
+            Method setGetAuth = daoClazz.getDeclaredMethod("setGetAuth", String.class);
+            setTransCode.invoke(dao, transCode);
+            setName.invoke(dao, name);
+            setPutAuth.invoke(dao, putAuth);
+            setGetAuth.invoke(dao, getAuth);
+        } catch (NoSuchMethodException e) {
+            throw new RuntimeException(e);
+        } catch (InvocationTargetException e) {
+            throw new RuntimeException(e);
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+        return dao;
     }
 }

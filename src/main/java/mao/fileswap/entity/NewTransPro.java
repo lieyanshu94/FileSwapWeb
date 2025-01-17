@@ -6,10 +6,10 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 @Data
-@TableName("NewTransPro")
+@TableName("NewTrans_Pro")
 public class NewTransPro {
     @TableId("transCode")
-    private Integer transCode;
+    private String transCode;
     @TableField("name")
     private String name;
     @TableField("putAuth")

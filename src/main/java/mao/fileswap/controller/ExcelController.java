@@ -1,6 +1,7 @@
 package mao.fileswap.controller;
 
 import com.baomidou.mybatisplus.extension.api.R;
+import mao.fileswap.service.NewTransProService;
 import mao.fileswap.util.ExcelUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -24,9 +25,7 @@ public class ExcelController {
     private R uploadProExcels(@RequestParam("files") MultipartFile[] files){
         for (MultipartFile file : files) {
             String name = file.getOriginalFilename();
-            InputStream is;
-            try {
-                is = file.getInputStream();
+            try(InputStream is = file.getInputStream();) {
                 excelUtil.proFileShunt(name,is);
             } catch (IOException e) {
                 throw new RuntimeException(e);

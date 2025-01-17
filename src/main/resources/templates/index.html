@@ -80,6 +80,7 @@
                 for (var file in files) {
                     this.proFormData.append("files",files[file].raw)
                 }
+                debugger;
                 axios({
                     headers:{
                         "Content-Type":"multipart/form-data"
@@ -92,7 +93,6 @@
                     for (let key of this.proFormData.keys()) {
                         this.proFormData.delete(key);
                     }
-                    debugger;
                 })
             },
             download() { },

@@ -9,7 +9,7 @@ import lombok.Data;
 @TableName("OldTrans_Test")
 public class OldTransTest {
     @TableId("transCode")
-    private Integer transCode;
+    private String transCode;
     @TableField("name")
     private String name;
     @TableField("putAuth")
