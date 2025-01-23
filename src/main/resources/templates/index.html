@@ -59,7 +59,8 @@
         data: {
             message: 'Hello, Thymeleaf and Vue!',
             form: {},
-            proFormData: new FormData()
+            proFormData: new FormData(),
+            testFormData: new FormData(),
 
         },
         mounted() {
@@ -76,24 +77,44 @@
             submitUpload() {
                 // this.$refs.uploadProExcels.submit();
                 // this.$refs.uploadProExcels.uploadFiles;
-                var files = this.$refs.uploadProExcels.uploadFiles;
-                for (var file in files) {
-                    this.proFormData.append("files",files[file].raw)
+                var proFiles = this.$refs.uploadProExcels.uploadFiles;
+                var proFlag = false;
+                for (var file in proFiles) {
+                    this.proFormData.append("files",proFiles[file].raw);
+                    proFlag = true;
                 }
-                debugger;
-                axios({
-                    headers:{
-                        "Content-Type":"multipart/form-data"
-                    },
-                    method: 'post',
-                    url: "/excel/uploadProExcels",
-                    data: this.proFormData
-                }).then(req => {
-                    console.log(req);
-                    for (let key of this.proFormData.keys()) {
-                        this.proFormData.delete(key);
-                    }
-                })
+                var testFile = this.$refs.uploadTestExcels.uploadFiles;
+                var testFlag = false;
+                for (var file in testFile) {
+                    this.testFormData.append("files",testFile[file].raw);
+                    testFlag = true;
+                }
+                if (proFlag) {
+                    axios({
+                        headers:{
+                            "Content-Type":"multipart/form-data"
+                        },
+                        method: 'post',
+                        url: "/excel/uploadProExcels",
+                        data: this.proFormData
+                    }).then(req => {
+                        console.log(req);
+                        this.proFormData = new FormData();
+                    })
+                }
+                if (testFlag){
+                    axios({
+                        headers:{
+                            "Content-Type":"multipart/form-data"
+                        },
+                        method: 'post',
+                        url: "/excel/uploadTestExcels",
+                        data: this.testFormData
+                    }).then(req => {
+                        console.log(req);
+                        this.testFormData = new FormData();
+                    })
+                }
             },
             download() { },
         }

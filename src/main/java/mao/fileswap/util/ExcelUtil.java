@@ -39,7 +39,6 @@ public class ExcelUtil {
     private OldUsersTestService oldUsersTestService;
 
     public boolean proFileShunt(String fileName, InputStream is) {
-        System.out.println(fileName);
         boolean isPro = true;
         switch (fileName) {
             case "FT_TRANSCODE.xlsx":
@@ -53,6 +52,24 @@ public class ExcelUtil {
             default:
                 throw new RuntimeException("文件不存在");
         }
+    }
+    public boolean testFileShunt(String fileName, InputStream is) {
+        boolean isPro = false;
+        switch (fileName) {
+            case "FT_TRANSCODE.xlsx":
+                return updateOldTrans(is, isPro);
+            case "FT_USER_INFO.xlsx":
+                return updateOldUsers(is, isPro);
+            case "传输代码数据.xlsx":
+                return updateNewTrans(is, isPro);
+            case "用户数据.xlsx":
+                return updateNewUsers(is, isPro);
+            default:
+                throw new RuntimeException("文件不存在");
+        }
+    }
+    public boolean onlineListFile(String fileName, InputStream is) {
+        return false;
     }
 
     public Workbook IStoWB(InputStream is) {
@@ -76,25 +93,27 @@ public class ExcelUtil {
             list.add(makeTransMap(tranCode, getAuth, putAuth));
         }
         if (isPro) {
+            List<OldTransPro> l = new ArrayList<>();
             for (Map<String, String> map : list) {
                 OldTransPro otp = new OldTransPro();
                 String transCode = map.get("transCode");
                 String name = map.get("name");
                 String getAuth = map.get("getAuth");
                 String putAuth = map.get("putAuth");
-                makeTransDao(otp, transCode, name, putAuth, getAuth);
-                oldTransProService.saveOrUpdate(otp);
+                l.add(makeTransDao(otp, transCode, name, putAuth, getAuth));
             }
+            oldTransProService.saveOrUpdateBatch(l);
         } else {
+            List<OldTransTest> l = new ArrayList<>();
             for (Map<String, String> map : list) {
                 OldTransTest ott = new OldTransTest();
                 String transCode = map.get("transCode");
                 String name = map.get("name");
                 String getAuth = map.get("getAuth");
                 String putAuth = map.get("putAuth");
-                makeTransDao(ott, transCode, name, putAuth, getAuth);
-                oldTransTestService.saveOrUpdate(ott);
+                l.add(makeTransDao(ott, transCode, name, putAuth, getAuth));
             }
+            oldTransTestService.saveOrUpdateBatch(l);
 
         }
         return false;
@@ -112,25 +131,93 @@ public class ExcelUtil {
             list.add(makeTransMap(tranCode, getAuth, putAuth));
         }
         if (isPro) {
+            List<NewTransPro> l = new ArrayList<>();
             for (Map<String, String> map : list) {
                 NewTransPro ntp = new NewTransPro();
                 String transCode = map.get("transCode");
                 String name = map.get("name");
                 String getAuth = map.get("getAuth");
                 String putAuth = map.get("putAuth");
-                makeTransDao(ntp, transCode, name, putAuth, getAuth);
-                newTransProService.saveOrUpdate(ntp);
+                l.add(makeTransDao(ntp, transCode, name, putAuth, getAuth));
             }
+            newTransProService.saveOrUpdateBatch(l);
         } else {
+            List<NewTransTest> l = new ArrayList<>();
             for (Map<String, String> map : list) {
                 NewTransTest ntt = new NewTransTest();
                 String transCode = map.get("transCode");
                 String name = map.get("name");
                 String getAuth = map.get("getAuth");
                 String putAuth = map.get("putAuth");
-                makeTransDao(ntt, transCode, name, putAuth, getAuth);
-                newTransTestService.saveOrUpdate(ntt);
+                l.add(makeTransDao(ntt, transCode, name, putAuth, getAuth));
             }
+            newTransTestService.saveOrUpdateBatch(l);
+
+        }
+        return false;
+    }
+
+
+    private boolean updateNewUsers(InputStream is, boolean isPro) {
+        Workbook wb = IStoWB(is);
+        Sheet sheet = wb.getSheetAt(0);
+        List<Map<String, String>> list = new ArrayList<>();
+        for (int rowNum = 2; rowNum <= sheet.getLastRowNum(); rowNum++) {
+            Row row = sheet.getRow(rowNum);
+            Map<String, String> map = new HashMap<>();
+            String uid = row.getCell(0).getStringCellValue();
+            String cnName = row.getCell(2).getStringCellValue();
+            map.put("uid", uid);
+            map.put("cnName", cnName);
+            list.add(map);
+        }
+        if (isPro) {
+            List<NewUsersPro> l = new ArrayList<>();
+            for (Map<String, String> map : list) {
+                NewUsersPro nup = new NewUsersPro();
+                l.add(makeUserDao(nup, map.get("uid"), map.get("cnName")));
+            }
+            newUsersProService.saveOrUpdateBatch(l);
+        } else {
+            List<NewUsersTest> l = new ArrayList<>();
+            for (Map<String, String> map : list) {
+                NewUsersTest nut = new NewUsersTest();
+                l.add(makeUserDao(nut, map.get("uid"), map.get("cnName")));
+            }
+            newUsersTestService.saveOrUpdateBatch(l);
+
+        }
+        return false;
+    }
+
+
+    private boolean updateOldUsers(InputStream is, boolean isPro) {
+        Workbook wb = IStoWB(is);
+        Sheet sheet = wb.getSheetAt(0);
+        List<Map<String, String>> list = new ArrayList<>();
+        for (int rowNum = 1; rowNum <= sheet.getLastRowNum(); rowNum++) {
+            Row row = sheet.getRow(rowNum);
+            Map<String, String> map = new HashMap<>();
+            String uid = row.getCell(5).getStringCellValue();
+            String cnName = row.getCell(1).getStringCellValue();
+            map.put("uid", uid);
+            map.put("cnName", cnName);
+            list.add(map);
+        }
+        if (isPro) {
+            List<OldUsersPro> l = new ArrayList<>();
+            for (Map<String, String> map : list) {
+                OldUsersPro oup = new OldUsersPro();
+                l.add(makeUserDao(oup, map.get("uid"), map.get("cnName")));
+            }
+            oldUsersProService.saveOrUpdateBatch(l);
+        } else {
+            List<OldUsersTest> l = new ArrayList<>();
+            for (Map<String, String> map : list) {
+                OldUsersTest out = new OldUsersTest();
+                l.add(makeUserDao(out, map.get("uid"), map.get("cnName")));
+            }
+            oldUsersTestService.saveOrUpdateBatch(l);
 
         }
         return false;
@@ -168,68 +255,6 @@ public class ExcelUtil {
         }
         return map;
     }
-
-    private boolean updateNewUsers(InputStream is, boolean isPro) {
-        Workbook wb = IStoWB(is);
-        Sheet sheet = wb.getSheetAt(0);
-        List<Map<String, String>> list = new ArrayList<>();
-        for (int rowNum = 2; rowNum <= sheet.getLastRowNum(); rowNum++) {
-            Row row = sheet.getRow(rowNum);
-            Map<String, String> map = new HashMap<>();
-            String uid = row.getCell(0).getStringCellValue();
-            String cnName = row.getCell(2).getStringCellValue();
-            map.put("uid", uid);
-            map.put("cnName", cnName);
-            list.add(map);
-        }
-        if (isPro) {
-            for (Map<String, String> map : list) {
-                NewUsersPro nup = new NewUsersPro();
-                makeUserDao(nup, map.get("uid"), map.get("cnName"));
-                newUsersProService.saveOrUpdate(nup);
-            }
-        } else {
-            for (Map<String, String> map : list) {
-                NewUsersTest nut = new NewUsersTest();
-                makeUserDao(nut, map.get("uid"), map.get("cnName"));
-                newUsersTestService.saveOrUpdate(nut);
-            }
-
-        }
-        return false;
-    }
-
-
-    private boolean updateOldUsers(InputStream is, boolean isPro) {
-        Workbook wb = IStoWB(is);
-        Sheet sheet = wb.getSheetAt(0);
-        List<Map<String, String>> list = new ArrayList<>();
-        for (int rowNum = 1; rowNum <= sheet.getLastRowNum(); rowNum++) {
-            Row row = sheet.getRow(rowNum);
-            Map<String, String> map = new HashMap<>();
-            String uid = row.getCell(5).getStringCellValue();
-            String cnName = row.getCell(1).getStringCellValue();
-            map.put("uid", uid);
-            map.put("cnName", cnName);
-            list.add(map);
-        }
-        if (isPro) {
-            for (Map<String, String> map : list) {
-                OldUsersPro oup = new OldUsersPro();
-                makeUserDao(oup, map.get("uid"), map.get("cnName"));
-                oldUsersProService.saveOrUpdate(oup);
-            }
-        } else {
-            for (Map<String, String> map : list) {
-                OldUsersTest out = new OldUsersTest();
-                makeUserDao(out, map.get("uid"), map.get("cnName"));
-                oldUsersTestService.saveOrUpdate(out);
-            }
-
-        }
-        return false;
-    }
-
     private <T> T makeUserDao(T dao, String uid, String cnName) {
         Class<?> daoClazz = dao.getClass();
         try {

@@ -20,30 +20,45 @@ public class ExcelController {
 
     @Autowired
     private ExcelUtil excelUtil;
+
     @PostMapping("uploadProExcels")
     @ResponseBody
-    private R uploadProExcels(@RequestParam("files") MultipartFile[] files){
+    private R uploadProExcels(@RequestParam("files") MultipartFile[] files) {
         for (MultipartFile file : files) {
             String name = file.getOriginalFilename();
-            try(InputStream is = file.getInputStream();) {
-                excelUtil.proFileShunt(name,is);
+            try (InputStream is = file.getInputStream();) {
+                excelUtil.proFileShunt(name, is);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
         }
         return R.ok("success");
     }
+
     @RequestMapping("uploadTestExcels")
     @ResponseBody
-    private void uploadTestExcels(@RequestParam("file")MultipartFile file){
-        System.out.println(file);
+    private R uploadTestExcels(@RequestParam("files") MultipartFile[] files) {
+        for (MultipartFile file : files) {
+            String name = file.getOriginalFilename();
+            try (InputStream is = file.getInputStream();) {
+                excelUtil.testFileShunt(name, is);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return R.ok("success");
 
     }
+
     @RequestMapping("uploadInventory")
     @ResponseBody
-    private void uploadInventory(@RequestParam("file")MultipartFile file){
-        System.out.println(file);
+    private void uploadInventory(@RequestParam("file") MultipartFile file) {
+        try (InputStream is = file.getInputStream()) {
 
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        System.out.println(file);
     }
 
 }
