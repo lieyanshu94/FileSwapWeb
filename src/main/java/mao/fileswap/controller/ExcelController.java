@@ -54,7 +54,8 @@ public class ExcelController {
     @ResponseBody
     private void uploadInventory(@RequestParam("file") MultipartFile file) {
         try (InputStream is = file.getInputStream()) {
-
+            String name = file.getOriginalFilename();
+            excelUtil.onlineListFile(name,is);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

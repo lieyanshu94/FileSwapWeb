@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="mao.fileswap.dao.NewUsersTestMapper">
     <!-- 定义结果映射，将数据库表字段映射到User实体类的属性上 -->
-    <resultMap id="NewTransPro" type="mao.fileswap.entity.NewUsersTest">
+    <resultMap id="NewUsersTest" type="mao.fileswap.entity.NewUsersTest">
         <id property="uid" column="uid" />
         <result property="cnName" column="cnName" />
     </resultMap>

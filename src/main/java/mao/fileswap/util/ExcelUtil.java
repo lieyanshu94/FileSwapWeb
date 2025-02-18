@@ -9,14 +9,13 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Component
 public class ExcelUtil {
@@ -69,6 +68,19 @@ public class ExcelUtil {
         }
     }
     public boolean onlineListFile(String fileName, InputStream is) {
+        List<String> abList = new ArrayList<>();
+        Properties properties = new Properties();
+        try(FileInputStream fileInputStream = new FileInputStream("onlineList.properties")) {
+            properties.load(fileInputStream);
+            String systemAbs = properties.getProperty("systemAb");
+            if (systemAbs != null && systemAbs.length() != 0) {
+                abList.addAll(new ArrayList<>(Arrays.asList(systemAbs.split(","))));
+            }
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         return false;
     }
 
