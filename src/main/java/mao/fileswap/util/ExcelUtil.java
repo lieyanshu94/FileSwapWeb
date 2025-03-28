@@ -36,6 +36,8 @@ public class ExcelUtil {
     private OldUsersProService oldUsersProService;
     @Autowired
     private OldUsersTestService oldUsersTestService;
+    @Autowired
+    private OnlineListService onlineListService;
 
     public boolean proFileShunt(String fileName, InputStream is) {
         boolean isPro = true;
@@ -68,9 +70,12 @@ public class ExcelUtil {
         }
     }
     public boolean onlineListFile(String fileName, InputStream is) {
+        OnlineList ol = new OnlineList();
         List<String> abList = new ArrayList<>();
+        Set<List> set = new HashSet<>();
         Properties properties = new Properties();
-        try(FileInputStream fileInputStream = new FileInputStream("onlineList.properties")) {
+        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        try(InputStream fileInputStream = classLoader.getResourceAsStream("onlineList.properties")) {
             properties.load(fileInputStream);
             String systemAbs = properties.getProperty("systemAb");
             if (systemAbs != null && systemAbs.length() != 0) {
@@ -81,9 +86,41 @@ public class ExcelUtil {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        Workbook wb = IStoWB(is);
+        Sheet sheet = wb.getSheetAt(0);
+        for (int rowNum = 1; rowNum < sheet.getLastRowNum(); rowNum++) {
+            Row row = sheet.getRow(rowNum);
+            List<String> list = new ArrayList<>();
+            if (row.getCell(4).getStringCellValue() != null && row.getCell(5).getStringCellValue() != null){
+                String cus = isOnlineSys(row.getCell(4).getStringCellValue(),abList);
+                String pro = isOnlineSys(row.getCell(5).getStringCellValue(),abList);
+                list.add(cus);
+                list.add(pro);
+                list.sort(String::compareTo);
+                set.add(list);
+            } else {
+                System.out.println(rowNum);
+            }
+        }
+        ol.setListNo(fileName.substring(0,fileName.lastIndexOf(".")));
+        String systemAbs = "[";
+        for(List list : set) {
+            systemAbs += "[";
+            for(Object s : list) {
+                String string = s.toString();
+                systemAbs += "\""+ string+"\",";
+            }
+            systemAbs = systemAbs.substring(0,systemAbs.length()-1)+"],";
+
+        }
+        systemAbs = systemAbs.substring(0,systemAbs.length()-1)+"]";
+        ol.setSystemAbs(systemAbs);
+        onlineListService.saveOnlineList(ol);
         return false;
     }
-
+    private String isOnlineSys(String sys,List list){
+        return list.contains(sys) ? "云上" : sys;
+    }
     public Workbook IStoWB(InputStream is) {
         try (Workbook wb = new XSSFWorkbook(is)) {
             return wb;
@@ -98,7 +135,6 @@ public class ExcelUtil {
         List<Map<String, String>> list = new ArrayList<>();
         for (int rowNum = 1; rowNum <= sheet.getLastRowNum(); rowNum++) {
             Row row = sheet.getRow(rowNum);
-            Map<String, String> map = new HashMap<>();
             String tranCode = row.getCell(0).getStringCellValue();
             String putAuth = row.getCell(5).getStringCellValue();
             String getAuth = row.getCell(6).getStringCellValue();
@@ -126,7 +162,6 @@ public class ExcelUtil {
                 l.add(makeTransDao(ott, transCode, name, putAuth, getAuth));
             }
             oldTransTestService.saveOrUpdateBatch(l);
-
         }
         return false;
     }

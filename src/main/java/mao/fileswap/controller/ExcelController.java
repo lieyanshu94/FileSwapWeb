@@ -1,7 +1,6 @@
 package mao.fileswap.controller;
 
 import com.baomidou.mybatisplus.extension.api.R;
-import mao.fileswap.service.NewTransProService;
 import mao.fileswap.util.ExcelUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -59,7 +58,6 @@ public class ExcelController {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        System.out.println(file);
     }
 
 }

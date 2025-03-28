@@ -61,6 +61,7 @@
             form: {},
             proFormData: new FormData(),
             testFormData: new FormData(),
+            onlineFormData: new FormData(),
 
         },
         mounted() {
@@ -89,6 +90,12 @@
                     this.testFormData.append("files",testFile[file].raw);
                     testFlag = true;
                 }
+                var onlineFile = this.$refs.uploadInventory.uploadFiles;
+                var onlineFlag = false;
+                for (var file in onlineFile) {
+                    this.onlineFormData.append("file",onlineFile[file].raw);
+                    onlineFlag = true;
+                }
                 if (proFlag) {
                     axios({
                         headers:{
@@ -113,6 +120,19 @@
                     }).then(req => {
                         console.log(req);
                         this.testFormData = new FormData();
+                    })
+                }
+                if (onlineFlag){
+                    axios({
+                        headers:{
+                            "Content-Type":"multipart/form-data"
+                        },
+                        method: 'post',
+                        url: "/excel/uploadInventory",
+                        data: this.onlineFormData
+                    }).then(req => {
+                        console.log(req);
+                        this.onlineFormData = new FormData();
                     })
                 }
             },
